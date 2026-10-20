@@ -1,0 +1,85 @@
+/**
+ * useLocationData Hook
+ * Manages location data loading from CDN/IndexDB
+ */
+
+import { useEffect, useState } from "react";
+import type { Country, State, City, District } from "@/services/location-types";
+import { locationService } from "@/services/location-service";
+import { districtService } from "@/services/district-service";
+
+export interface UseLocationDataResult {
+  countries: Country[];
+  getStatesByCountry: (countryId: number) => Promise<State[]>;
+  getCitiesByState: (stateId: number) => Promise<City[]>;
+  getCitiesByCountry: (countryId: number) => Promise<City[]>;
+  getDistrictsByCity: (
+    cityName: string,
+    stateName: string,
+    countryName: string
+  ) => Promise<District[]>;
+  getCountryByName: (name: string) => Promise<Country | undefined>;
+  getStateByName: (countryId: number, stateName: string) => Promise<State | undefined>;
+  getCityByName: (stateId: number, cityName: string) => Promise<City | undefined>;
+  isLoading: boolean;
+  error: Error | null;
+  refresh: () => Promise<void>;
+}
+
+export function useLocationData(): UseLocationDataResult {
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refresh = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await locationService.refreshData();
+      setCountries(data.countries);
+      console.log("✓ Location data refreshed");
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error);
+      console.error("Failed to refresh location data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await locationService.loadData();
+        setCountries(data.countries);
+        console.log(`✓ Location data loaded: ${data.countries.length} countries`);
+        console.log("isLoading will be set to false");
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Unknown error");
+        setError(error);
+        console.error("Failed to load location data:", error);
+      } finally {
+        setIsLoading(false);
+        console.log("isLoading = false");
+      }
+    };
+    loadData();
+  }, []);
+
+  return {
+    countries,
+    getStatesByCountry: locationService.getStatesByCountry.bind(locationService),
+    getCitiesByState: locationService.getCitiesByState.bind(locationService),
+    getCitiesByCountry: locationService.getCitiesByCountry.bind(locationService),
+    getDistrictsByCity: districtService.getDistrictsByCity.bind(districtService),
+    getCountryByName: locationService.getCountryByName.bind(locationService),
+    getStateByName: locationService.getStateByName.bind(locationService),
+    getCityByName: locationService.getCityByName.bind(locationService),
+    isLoading,
+    error,
+    refresh,
+  };
+}

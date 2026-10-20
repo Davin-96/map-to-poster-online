@@ -1,0 +1,32 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_renderresult_free: (a: number, b: number) => void;
+export const get_version: (a: number) => void;
+export const hello_wasm: (a: number, b: number, c: number) => void;
+export const init_panic_hook: () => void;
+export const parse_polygons_to_bin: (a: number, b: number, c: number) => void;
+export const parse_polygons_typed: (a: number, b: number, c: number) => void;
+export const parse_polygons_val: (a: number, b: number) => void;
+export const parse_roads_to_bin: (a: number, b: number, c: number) => void;
+export const parse_roads_typed: (a: number, b: number, c: number) => void;
+export const parse_roads_val: (a: number, b: number) => void;
+export const process_polygons_bin_wasm: (a: number, b: number, c: number) => void;
+export const process_roads_bin_wasm: (a: number, b: number, c: number) => void;
+export const render_map: (a: number, b: number) => number;
+export const render_map_binary: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => number;
+export const render_map_binary_with_font: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
+export const render_map_msgpack: (a: number, b: number) => number;
+export const renderresult_error: (a: number, b: number) => number;
+export const renderresult_get_data: (a: number, b: number) => void;
+export const renderresult_get_error: (a: number, b: number) => void;
+export const renderresult_get_height: (a: number) => number;
+export const renderresult_get_width: (a: number) => number;
+export const renderresult_is_success: (a: number) => number;
+export const renderresult_success: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_export: (a: number, b: number) => number;
+export const __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_export3: (a: number) => void;
+export const __wbindgen_export4: (a: number, b: number, c: number) => void;
+export const __wbindgen_add_to_stack_pointer: (a: number) => number;
+export const __wbindgen_start: () => void;
