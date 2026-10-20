@@ -73,6 +73,12 @@ export function useReverseGeocode({
 
       setters.setSelectedCountry(country.name);
 
+      // 国家匹配成功即同步 location.country，避免 state/city 匹配失败时
+      // 导出海报仍显示旧国家（如坐标在上海却显示 FRANCE）
+      setters.setLocation((prev) =>
+        prev.country === country.name ? prev : { ...prev, country: country.name }
+      );
+
       // 2. 加载省份，匹配省/州
       setters.setIsStatesLoading(true);
       try {
@@ -100,7 +106,13 @@ export function useReverseGeocode({
           }
         }
         console.log(`[GeoMatch] state: ${stateQuery}->${matchedState?.name || "×"}`);
-        if (!matchedState) return;
+        if (!matchedState) {
+          // 省份匹配失败也同步反查到的省名，保持 location 与坐标一致
+          if (stateQuery) {
+            setters.setLocation((prev) => ({ ...prev, state: stateQuery }));
+          }
+          return;
+        }
 
         setters.setSelectedState(matchedState.name);
 
@@ -152,7 +164,13 @@ export function useReverseGeocode({
           }
         }
         console.log(`[GeoMatch] city: ${cityName}->${matchedCity?.name || "×"}`);
-        if (!matchedCity) return;
+        if (!matchedCity) {
+          // 城市匹配失败也同步反查到的城市名
+          if (cityName) {
+            setters.setLocation((prev) => ({ ...prev, city: cityName }));
+          }
+          return;
+        }
 
         setters.setSelectedCity(matchedCity.name);
 
