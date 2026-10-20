@@ -32,7 +32,7 @@ const MAX_SUPPORTED_INVERSE_ASPECT = Math.max(
   ...SUPPORTED_POSTER_DIMENSIONS.map(({ width, height }) => height / width)
 );
 
-export const MAP_DATA_CACHE_VERSION = "v12-coastline-topology-v2";
+export const MAP_DATA_CACHE_VERSION = "v13-protomaps-full-coverage";
 
 export function buildRenderViewportBbox({
   centerLat,

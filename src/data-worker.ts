@@ -187,6 +187,54 @@ function mergeWaterGeoForViewport(
   });
 }
 
+/**
+ * 坏缓存防御: 抽样校验缓存的 GeoJSON 道路是否落在预期抓取范围附近。
+ * 历史缺陷 (Protomaps TILE_LIMIT=1000 从西侧列截断) 会把不完整数据写入缓存,
+ * 命中后导出海报中心无底图。覆盖率 < 0.6 视为坏数据。
+ */
+async function validateCachedRoadsCoverage(
+  blob: Blob,
+  center: { lat: number; lng: number; baseRadius: number }
+): Promise<boolean> {
+  try {
+    const rawJson = await decompress(blob);
+    const json = JSON.parse(rawJson) as GeoJSON.FeatureCollection;
+    const halfWidthMeters = center.baseRadius * 2.5; // 宽松阈值: 允许 fetchRadius 扩张 + 投影边缘
+    const latPad = halfWidthMeters / 111320;
+    const lngPad = halfWidthMeters / (111320 * Math.max(0.2, Math.cos((center.lat * Math.PI) / 180)));
+    const minLng = center.lng - lngPad;
+    const maxLng = center.lng + lngPad;
+    const minLat = center.lat - latPad;
+    const maxLat = center.lat + latPad;
+    let inside = 0;
+    let total = 0;
+    for (const f of json.features || []) {
+      const geom = f.geometry;
+      if (!geom) continue;
+      const coords: number[][] =
+        geom.type === "LineString"
+          ? (geom.coordinates as number[][])
+          : geom.type === "MultiLineString"
+            ? (geom.coordinates as number[][][])[0] || []
+            : [];
+      const step = Math.max(1, Math.floor(coords.length / 5));
+      for (let ci = 0; ci < coords.length; ci += step) {
+        const [lon, lat] = coords[ci] || [];
+        if (typeof lon !== "number" || typeof lat !== "number") continue;
+        total++;
+        if (lon >= minLng && lon <= maxLng && lat >= minLat && lat <= maxLat) inside++;
+      }
+    }
+    if (total === 0) return false; // 空数据也是坏缓存
+    const ratio = inside / total;
+    console.log(`[DataWorker] Cache coverage check: ${inside}/${total} = ${ratio.toFixed(2)}`);
+    return ratio >= 0.6;
+  } catch (e) {
+    console.warn("[DataWorker] Cache coverage check failed to parse:", e);
+    return false;
+  }
+}
+
 async function restoreCachedType(
   type: MapDataType,
   blob: Blob,
@@ -336,6 +384,17 @@ self.onmessage = async (event: MessageEvent) => {
         const key = createCacheKey(country, city, baseRadius, lodMode, mapType, district);
         const blob = await db.get(STORE_NAME, key);
         if (blob) {
+          // 【坏缓存防御】历史 bug (TILE_LIMIT 截断只抓到城市西侧) 的旧缓存数据不完整,
+          // 抽样校验道路覆盖范围, 覆盖率过低则删除并按缓存 miss 处理
+          if (mapType === "roads") {
+            const ok = await validateCachedRoadsCoverage(blob, { lat, lng, baseRadius });
+            if (!ok) {
+              console.warn(`[DataWorker] Cached roads for ${city} failed coverage check — deleting stale cache`);
+              await db.delete(STORE_NAME, key);
+              missingTypes.add(mapType);
+              continue;
+            }
+          }
           cachedBlobs[mapType] = blob;
         } else {
           missingTypes.add(mapType);
