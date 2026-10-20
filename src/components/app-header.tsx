@@ -61,7 +61,7 @@ export function AppHeader({
   return (
     <header className="shrink-0 bg-background">
       <div className="mx-0 md:mx-20 px-4 py-4 flex items-center">
-        <img className="w-10 h-10 mr-2" src="/icon.svg" alt="icon" />
+        <img className="w-10 h-10 mr-2" src="./icon.svg" alt="icon" />
         <div className="mr-auto select-none">
           <h1 className="text-2xl tracking-wide  text-foreground">
             {m.app_title({}, localeOptions)}

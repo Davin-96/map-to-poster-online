@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "Gesamten Cache leeren?",
 	"error_modal_clear_confirm_desc": "Alle zwischengespeicherten Kartendaten, Konfigurationen und generierten Assets werden entfernt. Die Seite wird neu geladen. Dieser Vorgang kann nicht rückgängig gemacht werden.",
 	"error_modal_confirm_clear": "Ja, alles löschen",
-	"error_modal_cancel": "Abbrechen"
+	"error_modal_cancel": "Abbrechen",
+	"font_preset_Roboto": "Roboto"
 }

@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "キャッシュをクリアしますか？",
 	"error_modal_clear_confirm_desc": "キャッシュされた地図データ、設定、生成されたアセットがすべて削除され、ページが再読み込みされます。この操作は元に戻せません。",
 	"error_modal_confirm_clear": "すべてクリア",
-	"error_modal_cancel": "キャンセル"
+	"error_modal_cancel": "キャンセル",
+	"font_preset_Roboto": "Roboto"
 }

@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "¿Limpiar todo el caché?",
 	"error_modal_clear_confirm_desc": "Se eliminarán todos los datos cartográficos en caché, la configuración y los recursos generados. La página se recargará. Esta acción no se puede deshacer.",
 	"error_modal_confirm_clear": "Sí, limpiar todo",
-	"error_modal_cancel": "Cancelar"
+	"error_modal_cancel": "Cancelar",
+	"font_preset_Roboto": "Roboto"
 }

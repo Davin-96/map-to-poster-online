@@ -192,8 +192,19 @@ export async function fetchFromProtomaps(
   const north = lat + deltaLat;
   const east = lon + deltaLon;
 
-  // 提升到 Zoom 15 以获取完整的街道细节（包括住宅区小巷）
-  const zoom = 15;
+  // 【修复导出空白】原实现固定 Z15 + TILE_LIMIT=1000 且按 x 外层顺序截断：
+  // 大半径 (fetchRadius≈30km) 时 bbox 需要 ~6000 瓦片，前 1000 个全在西侧列，
+  // 画布中心瓦片完全缺失 → 渲染空白海报。
+  // 修复：1) 估算瓦片数自适应降 zoom；2) 提高上限；3) 按距中心距离排序，优先抓中心。
+  const TILE_LIMIT = 2200;
+  const estTiles = (z: number) => {
+    const xA = lon2tile(west, z), xB = lon2tile(east, z);
+    const yA = lat2tile(north, z), yB = lat2tile(south, z);
+    return (xB - xA + 1) * (yB - yA + 1);
+  };
+  // Z15 保细节，瓦片超限时逐级降到 Z13（约 ÷16）
+  let zoom = 15;
+  while (zoom > 13 && estTiles(zoom) > TILE_LIMIT) zoom--;
   const xMin = lon2tile(west, zoom);
   const xMax = lon2tile(east, zoom);
   const yMin = lat2tile(north, zoom);
@@ -205,16 +216,24 @@ export async function fetchFromProtomaps(
   const pois: GeoJSON.Feature[] = [];
 
   const fetchQueue: { x: number; y: number }[] = [];
-  // 限制范围，防止在特大城市 Z15 抓取太多瓦片导致内存溢出
-  const TILE_LIMIT = 1000;
-  let count = 0;
+  let failedTiles = 0;
+  // 中心瓦片（用户画布中央）最关键，按到中心的切比雪夫距离排序
+  const cx = (xMin + xMax) / 2;
+  const cy = (yMin + yMax) / 2;
   for (let x = xMin; x <= xMax; x++) {
     for (let y = yMin; y <= yMax; y++) {
-      if (count++ < TILE_LIMIT) fetchQueue.push({ x, y });
+      fetchQueue.push({ x, y });
     }
   }
+  fetchQueue.sort(
+    (a, b) =>
+      Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy)) -
+      Math.max(Math.abs(b.x - cx), Math.abs(b.y - cy))
+  );
+  if (fetchQueue.length > TILE_LIMIT) fetchQueue.length = TILE_LIMIT;
+  const totalTiles = fetchQueue.length;
 
-  console.log(`[Protomaps] Fetching ${fetchQueue.length} tiles at Z${zoom} for bbox...`);
+  console.log(`[Protomaps] Fetching ${fetchQueue.length}/${totalTiles} tiles at Z${zoom} for bbox...`);
 
   // 限制并发数量
   const CONCURRENCY = 10;
@@ -223,8 +242,22 @@ export async function fetchFromProtomaps(
       const { x, y } = fetchQueue.shift()!;
       const url = `https://api.protomaps.com/tiles/v3/${zoom}/${x}/${y}.mvt?key=${PROTOMAPS_API_KEY}`;
       try {
-        const response = await fetch(url);
-        if (!response.ok) continue;
+        let response: Response | null = null;
+        // 重试 3 次: protomaps 偶发 429/超时, 静默跳过会导致整城空白
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            response = await fetch(url);
+            if (response.ok) break;
+          } catch (fetchErr) {
+            if (attempt === 2) console.warn(`[Protomaps] tile ${zoom}/${x}/${y} fetch error:`, fetchErr);
+          }
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+          response = null;
+        }
+        if (!response || !response.ok) {
+          failedTiles++;
+          continue;
+        }
         const buffer = await response.arrayBuffer();
         const pbf = new Pbf(new Uint8Array(buffer));
         const tile = new VectorTile(pbf);
@@ -246,8 +279,8 @@ export async function fetchFromProtomaps(
             "leisure",
           ];
           extractLayerFeatures(layer, x, y, zoom, landuse, (f) => {
-            const k = f.properties?.kind || "";
-            const kd = f.properties?.kind_detail || "";
+            const k = f.properties?.["pmap:kind"] ?? f.properties?.kind ?? "";
+            const kd = f.properties?.["pmap:kind_detail"] ?? f.properties?.kind_detail ?? "";
             return parkKinds.includes(k) || parkKinds.includes(kd);
           });
         };
@@ -276,8 +309,11 @@ export async function fetchFromProtomaps(
   }
 
   console.log(
-    `[Protomaps] Download complete. Roads: ${roads.length}, Water: ${water.length}, Parks: ${landuse.length}, POIs: ${pois.length}`
+    `[Protomaps] Download complete. Roads: ${roads.length}, Water: ${water.length}, Parks: ${landuse.length}, POIs: ${pois.length}, FailedTiles: ${failedTiles}/${totalTiles + failedTiles}`
   );
+  if (roads.length === 0) {
+    console.error(`[Protomaps] CRITICAL: 0 roads fetched! failedTiles=${failedTiles}`);
+  }
 
   return {
     roads: { type: "FeatureCollection", features: roads },
@@ -319,8 +355,11 @@ function extractLayerFeatures(
 
     // 关键：属性预处理，确保后续的 roadTypeToEnum 能识别
     if (geojson.properties) {
-      const pk = geojson.properties.kind;
-      const pd = geojson.properties.kind_detail;
+      // Protomaps V3 瓦片属性带 "pmap:" 前缀 (pmap:kind / pmap:kind_detail), 兼容两种
+      const pk = geojson.properties["pmap:kind"] ?? geojson.properties.kind;
+      const pd = geojson.properties["pmap:kind_detail"] ?? geojson.properties.kind_detail;
+      geojson.properties.kind = pk;
+      geojson.properties.kind_detail = pd;
 
       if (!geojson.properties.highway) {
         // 1. 优先尝试映射具体的 kind_detail

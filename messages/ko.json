@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "모든 캐시를 삭제하시겠습니까?",
 	"error_modal_clear_confirm_desc": "캐시된 모든 지도 데이터, 구성 및 생성된 자산이 제거됩니다. 페이지가 새로고침됩니다. 이 작업은 취소할 수 없습니다.",
 	"error_modal_confirm_clear": "모두 삭제",
-	"error_modal_cancel": "취소"
+	"error_modal_cancel": "취소",
+	"font_preset_Roboto": "Roboto"
 }

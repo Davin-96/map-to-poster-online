@@ -411,6 +411,7 @@ self.onmessage = async (event: MessageEvent) => {
           sendProgress(5, "step_fetching_data");
           const protomapsData = await fetchFromProtomaps([lat, lng], fetchRadius);
           if (!protomapsData) throw new Error("Failed to fetch data from Protomaps");
+          sendProgress(8, `proto_roads_${protomapsData.roads.features.length}_water_${protomapsData.water.features.length}`);
           if (missingTypes.has("roads")) {
             roadsGeo = protomapsData.roads;
             results.roads = flattenRoadsGeoJSON(roadsGeo) as any;

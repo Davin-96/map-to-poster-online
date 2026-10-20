@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "确认清除所有缓存？",
 	"error_modal_clear_confirm_desc": "所有缓存的地图数据、配置和生成资源将被删除，页面将重新加载。此操作不可撤销。",
 	"error_modal_confirm_clear": "确认清除",
-	"error_modal_cancel": "取消"
+	"error_modal_cancel": "取消",
+	"font_preset_Roboto": "Roboto"
 }

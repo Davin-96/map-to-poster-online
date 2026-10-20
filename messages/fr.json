@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "Vider tout le cache ?",
 	"error_modal_clear_confirm_desc": "Toutes les données cartographiques, la configuration et les ressources générées seront supprimées. La page sera rechargée. Cette action est irréversible.",
 	"error_modal_confirm_clear": "Oui, tout effacer",
-	"error_modal_cancel": "Annuler"
+	"error_modal_cancel": "Annuler",
+	"font_preset_Roboto": "Roboto"
 }

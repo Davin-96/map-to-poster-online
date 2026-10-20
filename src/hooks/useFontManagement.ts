@@ -21,8 +21,9 @@ interface FontManagement {
 const MAX_FONT_SIZE_BYTES = 5 * 1024 * 1024;
 
 const fontMap: Record<string, string> = {
-  LXGW_Neo_ZhiSong: "/font/LXGWNeoZhiSong.ttf",
-  fraunces: "/font/Fraunces_72pt-Regular.ttf",
+  LXGW_Neo_ZhiSong: "./font/LXGWNeoZhiSong.ttf",
+  fraunces: "./font/Fraunces_72pt-Regular.ttf",
+  Roboto: "./font/Roboto-Regular.ttf",
 };
 
 function resetFileInput(inputRef: RefObject<HTMLInputElement | null>) {

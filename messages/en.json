@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "Clear All Cache?",
 	"error_modal_clear_confirm_desc": "All cached map data, configuration, and generated assets will be removed. The page will reload. This action cannot be undone.",
 	"error_modal_confirm_clear": "Yes, Clear Everything",
-	"error_modal_cancel": "Cancel"
+	"error_modal_cancel": "Cancel",
+	"font_preset_Roboto": "Roboto"
 }

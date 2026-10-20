@@ -312,5 +312,6 @@
 	"error_modal_clear_confirm_title": "Очистить весь кэш?",
 	"error_modal_clear_confirm_desc": "Все кэшированные картографические данные, настройки и сгенерированные ресурсы будут удалены. Страница будет перезагружена. Это действие нельзя отменить.",
 	"error_modal_confirm_clear": "Да, очистить всё",
-	"error_modal_cancel": "Отмена"
+	"error_modal_cancel": "Отмена",
+	"font_preset_Roboto": "Roboto"
 }

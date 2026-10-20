@@ -18,6 +18,7 @@ const PRESETS = [
   { key: "default", label: () => m.font_preset_default() },
   { key: "LXGW_Neo_ZhiSong", label: () => m.font_preset_LXGW_Neo_ZhiSong() },
   { key: "fraunces", label: () => m.font_preset_fraunces() },
+  { key: "Roboto", label: () => m.font_preset_Roboto() },
 ];
 
 export function FontSettings({
